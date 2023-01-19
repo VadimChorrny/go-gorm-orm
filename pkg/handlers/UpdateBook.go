@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"go-gorm-orm/pkg/mocks"
+	"fmt"
 	"go-gorm-orm/pkg/models"
 	"io/ioutil"
 	"log"
@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func UpdateBook(w http.ResponseWriter, r *http.Request) {
+func (h handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	// Read dynamic ids
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
@@ -26,19 +26,20 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	var updatedBook models.Book
 	json.Unmarshal(body, &updatedBook)
-	// Iterate over all the mock Books
-	for index, book := range mocks.Books {
-		if book.Id == id {
-			// Update book if match id equal dynamic id
 
-			book.Title = updatedBook.Title
-			book.Desc = updatedBook.Desc
+	var book models.Book
 
-			mocks.Books[index] = book
-
-			w.WriteHeader(http.StatusOK)
-			w.Header().Add("Content-Type", "application/json")
-			json.NewEncoder(w).Encode("Updated!")
-		}
+	if result := h.DB.Find(&book, id); result.Error != nil {
+		fmt.Println(err)
 	}
+
+	book.Title = updatedBook.Title
+	book.Author = updatedBook.Author
+	book.Desc = updatedBook.Desc
+
+	h.DB.Save(&book)
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode("Updated!")
 }

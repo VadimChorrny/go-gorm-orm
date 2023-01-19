@@ -2,15 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
-	"go-gorm-orm/pkg/mocks"
+	"fmt"
 	"go-gorm-orm/pkg/models"
 	"io/ioutil"
 	"log"
-	mathRand "math/rand"
 	"net/http"
 )
 
-func AddBook(w http.ResponseWriter, r *http.Request) {
+func (h handler) AddBook(w http.ResponseWriter, r *http.Request) {
 	// Read to request body
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -23,8 +22,9 @@ func AddBook(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(body, &book)
 
 	// Append to the Book mocks
-	book.Id = mathRand.Intn(100)
-	mocks.Books = append(mocks.Books, book)
+	if result := h.DB.Create(&book); result.Error != nil {
+		fmt.Println(result.Error)
+	}
 	// Send a 201 created response
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Add("Content-Type", "application/json")
